@@ -9,6 +9,8 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.TimerTask;
 
 /**
@@ -23,7 +25,7 @@ import java.util.TimerTask;
  * 关闭 mRecorder，并用 SharedPreferences 保存录音文件的信息，最后将 mRecorder 置空，防止内存泄露
  */
 
-public class RecordingService extends Service {
+public class RecordingService extends Service implements MediaRecorder.OnInfoListener{
 
     private static final String LOG_TAG = "RecordingService";
 
@@ -74,7 +76,8 @@ public class RecordingService extends Service {
         mRecorder.setAudioChannels(1);
         mRecorder.setAudioSamplingRate(44100);
         mRecorder.setAudioEncodingBitRate(192000);
-
+        mRecorder.setMaxDuration(1*60*1000);
+        mRecorder.setOnInfoListener(this);
         try {
             mRecorder.prepare();
             mRecorder.start();
@@ -87,13 +90,15 @@ public class RecordingService extends Service {
     public void setFileNameAndPath() {
         int count = 0;
         File f;
-
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        String todayDate = sdf.format(new Date());
         do {
             count++;
             mFileName = getString(R.string.default_file_name)
                     + "_" + (System.currentTimeMillis()) + ".mp4";
             mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-            mFilePath += "/SoundRecorder/" + mFileName;
+            mFilePath += "/SoundRecorder/" +todayDate+"/"+ mFileName;
+//            mFilePath += "/SoundRecorder/" + mFileName;
             f = new File(mFilePath);
         } while (f.exists() && !f.isDirectory());
     }
@@ -116,4 +121,16 @@ public class RecordingService extends Service {
         mRecorder = null;
     }
 
+    /**
+     * MediaRecorder的reset() 方法，可以重置参数，继续录音，结合setMaxDuration和 MediaRecorder.OnInfoListener
+     * 来监听当时间间隔达到时捕获事件变可实现音频文件每隔一段时间存储一次
+     * */
+    @Override
+    public void onInfo(MediaRecorder mediaRecorder, int what, int i1) {
+        if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+            mRecorder.reset();//reset
+            startRecording();
+
+        }
+    }
 }

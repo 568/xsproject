@@ -20,8 +20,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.melnykov.fab.FloatingActionButton;
+import com.sid.soundrecorderutils.network.APIForegroundService;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * 开始录音的 DialogFragment
@@ -80,7 +83,7 @@ public class RecordAudioDialogFragment extends DialogFragment {
                 if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(getActivity()
-                            , new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO}, 1);
+                            , new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO,android.Manifest.permission.READ_PHONE_STATE}, 1);
                 } else {
                     onRecord(mStartRecording);
                     mStartRecording = !mStartRecording;
@@ -116,7 +119,15 @@ public class RecordAudioDialogFragment extends DialogFragment {
             mFabRecord.setImageResource(R.drawable.ic_media_stop);
             //mPauseButton.setVisibility(View.VISIBLE);
             Toast.makeText(getActivity(), "开始录音...", Toast.LENGTH_SHORT).show();
-            File folder = new File(Environment.getExternalStorageDirectory() + "/SoundRecorder");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            String todayDate = sdf.format(new Date());
+            File dfolder = new File(Environment.getExternalStorageDirectory() + "/SoundRecorder");
+            if (!dfolder.exists()) {
+                //folder /SoundRecorder doesn't exist, create the folder
+                dfolder.mkdir();
+            }
+
+            File folder = new File(Environment.getExternalStorageDirectory() + "/SoundRecorder/"+todayDate);
             if (!folder.exists()) {
                 //folder /SoundRecorder doesn't exist, create the folder
                 folder.mkdir();
@@ -131,7 +142,10 @@ public class RecordAudioDialogFragment extends DialogFragment {
             //keep screen on while recording
 //            getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-
+            //开启文件上传服务
+            Intent intent2 = new Intent(getActivity(), APIForegroundService.class);
+            intent2.putExtra("flags", "233333");
+            getActivity().startService(intent2);
         } else {
             //stop recording
             mFabRecord.setImageResource(R.drawable.ic_mic_white_36dp);

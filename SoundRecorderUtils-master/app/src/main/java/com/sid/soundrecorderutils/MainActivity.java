@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.sid.soundrecorderutils.help.ScreenBroadcastListener;
+import com.sid.soundrecorderutils.help.ScreenManager;
+
 /**
  * Created by lv on 2019/09/26.
  * */
@@ -18,6 +21,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final ScreenManager screenManager = ScreenManager.getInstance(MainActivity.this);
+        ScreenBroadcastListener listener = new ScreenBroadcastListener(this);
+        listener.registerListener(new ScreenBroadcastListener.ScreenStateListener() {
+            @Override
+            public void onScreenOn() {
+                screenManager.finishActivity();
+            }
+
+            @Override
+            public void onScreenOff() {
+                screenManager.startActivity();
+            }
+        });
         initView();
         mBtnRecordAudio.setOnClickListener(new View.OnClickListener() {
             @Override
