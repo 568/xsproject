@@ -32,6 +32,10 @@ public class ScreenBroadcastListener {
      * screen状态广播接收者
      */
     public class ScreenBroadcastReceiver extends BroadcastReceiver {
+
+        public ScreenBroadcastReceiver() {
+        }
+
         private String action = null;
 
         @Override

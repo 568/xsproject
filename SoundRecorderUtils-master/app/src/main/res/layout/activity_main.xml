@@ -16,7 +16,12 @@
         android:id="@+id/main_btn_play_sound"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:text="播放录音"
-        android:visibility="gone" />
-
+        android:text="上传录音"
+        android:visibility="visible" />
+    <Button
+        android:id="@+id/main_btn_stop_service"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="停止上传录音"
+        android:visibility="visible" />
 </LinearLayout>

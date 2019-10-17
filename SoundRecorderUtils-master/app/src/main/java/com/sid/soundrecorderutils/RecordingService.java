@@ -94,8 +94,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         String todayDate = sdf.format(new Date());
         do {
             count++;
-            mFileName = getString(R.string.default_file_name)
-                    + "_" + (System.currentTimeMillis()) + ".mp4";
+            mFileName =  (System.currentTimeMillis()) + ".mp4";
             mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
             mFilePath += "/SoundRecorder/" +todayDate+"/"+ mFileName;
 //            mFilePath += "/SoundRecorder/" + mFileName;
