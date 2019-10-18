@@ -1,11 +1,18 @@
 package com.sid.soundrecorderutils;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import com.sid.soundrecorderutils.help.AssistService;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +32,7 @@ import java.util.TimerTask;
  * 关闭 mRecorder，并用 SharedPreferences 保存录音文件的信息，最后将 mRecorder 置空，防止内存泄露
  */
 
-public class RecordingService extends Service implements MediaRecorder.OnInfoListener{
-
-    private static final String LOG_TAG = "RecordingService";
+public class RecordingService extends Service implements MediaRecorder.OnInfoListener {
 
     private String mFileName = null;
     private String mFilePath = null;
@@ -51,14 +56,18 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startRecording();
+        setForeground();
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        if (mRecorder != null) {
-            stopRecording();
-        }
+        Log.e("sr_up", "录音服务中断了!!!!!!!");
+//        if (mRecorder != null) {
+//            stopRecording();
+//        }
+        Intent intent= new Intent(this,RecordingService.class);
+        startService(intent);
         super.onDestroy();
     }
 
@@ -76,14 +85,14 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         mRecorder.setAudioChannels(1);
         mRecorder.setAudioSamplingRate(44100);
         mRecorder.setAudioEncodingBitRate(192000);
-        mRecorder.setMaxDuration(1*60*1000);
+        mRecorder.setMaxDuration(5 * 60 * 1000);
         mRecorder.setOnInfoListener(this);
         try {
             mRecorder.prepare();
             mRecorder.start();
             mStartingTimeMillis = System.currentTimeMillis();
         } catch (IOException e) {
-            Log.e(LOG_TAG, "prepare() failed");
+            Log.e("sr_up", "prepare() failed");
         }
     }
 
@@ -94,9 +103,9 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         String todayDate = sdf.format(new Date());
         do {
             count++;
-            mFileName =  (System.currentTimeMillis()) + ".mp4";
+            mFileName = (System.currentTimeMillis()) + ".mp4";
             mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-            mFilePath += "/SoundRecorder/" +todayDate+"/"+ mFileName;
+            mFilePath += "/SoundRecorder/" + todayDate + "/" + mFileName;
 //            mFilePath += "/SoundRecorder/" + mFileName;
             f = new File(mFilePath);
         } while (f.exists() && !f.isDirectory());
@@ -123,13 +132,73 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     /**
      * MediaRecorder的reset() 方法，可以重置参数，继续录音，结合setMaxDuration和 MediaRecorder.OnInfoListener
      * 来监听当时间间隔达到时捕获事件变可实现音频文件每隔一段时间存储一次
-     * */
+     */
     @Override
     public void onInfo(MediaRecorder mediaRecorder, int what, int i1) {
         if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
             mRecorder.reset();//reset
             startRecording();
+            Log.e("sr_up", "新的一段....");
+        }
+    }
+
+
+    // 要注意的是android4.3之后Service.startForeground() 会强制弹出通知栏，解决办法是再
+    // 启动一个service和推送共用一个通知栏，然后stop这个service使得通知栏消失。
+    private void setForeground() {
+
+        if (mServiceConnection == null)
+        {
+            mServiceConnection = new AssistServiceConnection();
+        }
+        // 绑定另外一条Service，目的是再启动一个通知，然后马上关闭。以达到通知栏没有相关通知
+        // 的效果
+        bindService(new Intent(this, AssistService.class), mServiceConnection,
+                Service.BIND_AUTO_CREATE);
+    }
+
+    // 启动notification的id，两次启动应是同一个id
+    private final static int NOTIFICATION_ID = android.os.Process.myPid();
+    private AssistServiceConnection mServiceConnection;
+
+
+    private class AssistServiceConnection implements ServiceConnection
+    {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Service assistService = ((AssistService.LocalBinder)service)
+                    .getService();
+            RecordingService.this.startForeground(NOTIFICATION_ID, getNotification());
+            assistService.startForeground(NOTIFICATION_ID, getNotification());
+            assistService.stopForeground(true);
+
+            RecordingService.this.unbindService(mServiceConnection);
+            mServiceConnection = null;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
 
         }
     }
+
+    private Notification getNotification()
+    {
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "")
+                .setContentTitle("服务运行于前台")
+                .setContentText("service被设为前台进程")
+                .setTicker("service正在后台运行...")
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setWhen(System.currentTimeMillis())
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingIntent);
+        Notification notification = builder.build();
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+        return notification;
+    }
+
+
 }

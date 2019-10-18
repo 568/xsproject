@@ -35,6 +35,9 @@
             android:name=".RecordingService"
             android:exported="true" />
         <service
+            android:name=".help.AssistService"
+            android:exported="true" />
+        <service
             android:name=".network.APIForegroundService"
             android:process=":soundrecord">
 

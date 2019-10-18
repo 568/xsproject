@@ -57,8 +57,8 @@ public class APIForegroundService extends Service {
                 public void run() {
                     while (pushthread) {
                         try {
-                            Thread.sleep(60*1000);
                             startUploadFile();
+                            Thread.sleep(10*60*1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
