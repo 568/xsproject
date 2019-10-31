@@ -14,9 +14,11 @@ import java.net.URLEncoder;
  */
 
 public class SoundRecoderApplication extends Application {
+    static SoundRecoderApplication instance;
     @Override
     public void onCreate() {
         super.onCreate();
+        instance=this;
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put("platform", "android");
         String androidId =Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
@@ -30,5 +32,9 @@ public class SoundRecoderApplication extends Application {
         }
 
         OkGo.getInstance().init(this).addCommonHeaders(httpHeaders);
+    }
+
+    public static SoundRecoderApplication getInstance(){
+        return instance;
     }
 }

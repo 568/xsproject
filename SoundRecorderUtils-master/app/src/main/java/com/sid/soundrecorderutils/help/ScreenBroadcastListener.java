@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import com.sid.soundrecorderutils.SoundRecoderApplication;
+
 /**
  * Created by lv on 19-10-15.
  */
@@ -15,7 +17,10 @@ public class ScreenBroadcastListener {
     private ScreenBroadcastReceiver mScreenReceiver;
 
     private ScreenStateListener mListener;
-
+    public ScreenBroadcastListener() {
+        mContext = SoundRecoderApplication.getInstance().getApplicationContext();
+        mScreenReceiver = new ScreenBroadcastReceiver();
+    }
     public ScreenBroadcastListener(Context context) {
         mContext = context.getApplicationContext();
         mScreenReceiver = new ScreenBroadcastReceiver();

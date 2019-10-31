@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.sid.soundrecorderutils">
-
+    <!-- android:sharedUserId="android.uid.system"-->
     <uses-sdk
         android:minSdkVersion="24"
         android:targetSdkVersion="26" />
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
-
     <application
         android:name=".SoundRecoderApplication"
         android:allowBackup="true"
@@ -32,6 +32,10 @@
         <activity android:name=".help.SinglePixelActivity" />
 
         <service
+            android:name=".help.JobHandlerService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
             android:name=".RecordingService"
             android:exported="true" />
         <service
@@ -48,6 +52,35 @@
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
+        <!-- 开机自启动广播接收 -->
+
+        <receiver android:name=".help.BootBroadcastReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 声明widget对应的AppWidgetProvider -->
+        <receiver android:name=".widget.MainWidgetProvider">
+            <intent-filter>
+                <!--这个是必须要有的系统规定-->
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <!--这个是我们自定义的 action ，用来更新UI，还可以自由添加更多 -->
+                <action android:name="com.xsrecord.widget.UPDATE_ALL"/>
+            </intent-filter>
+            <!--要显示的布局-->
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/app_main_widget"/>
+        </receiver>
+
+        <!-- 用来计时，发送 通知桌面部件更新 -->
+        <service android:name=".widget.WidgetService" >
+            <intent-filter>
+                <!--用来启动服务-->
+                <action android:name="android.appwidget.action.APP_WIDGET_SERVICE" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

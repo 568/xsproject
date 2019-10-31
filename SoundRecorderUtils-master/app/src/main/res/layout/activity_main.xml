@@ -13,15 +13,38 @@
         android:text="开始录音" />
 
     <Button
+        android:id="@+id/main_btn_stop_record_sound"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="停止录音"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:id="@+id/record_audio_text_time"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center"
+        android:text="时长"
+        android:textColor="@color/primary_text" />
+
+    <Button
         android:id="@+id/main_btn_play_sound"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:text="上传录音"
-        android:visibility="visible" />
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/main_btn_stop_service"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:text="停止上传录音"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/gobackbtn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text=""
         android:visibility="visible" />
 </LinearLayout>

@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.carmelo.library.KeepLiveManager;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
@@ -33,6 +34,7 @@ public class APIForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        KeepLiveManager.getInstance().setServiceForeground(this);
         if (intent.getStringExtra("flags").equals("233333")) {
             pushthread = true;
             count = 0;

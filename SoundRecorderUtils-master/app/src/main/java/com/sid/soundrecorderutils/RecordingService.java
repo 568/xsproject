@@ -12,10 +12,10 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.carmelo.library.KeepLiveManager;
 import com.sid.soundrecorderutils.help.AssistService;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimerTask;
@@ -43,6 +43,8 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     private long mElapsedMillis = 0;
     private TimerTask mIncrementTimerTask = null;
 
+    public static volatile boolean isRecordSuccess = false;
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -55,6 +57,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        KeepLiveManager.getInstance().setServiceForeground(this);
         startRecording();
         setForeground();
         return START_STICKY;
@@ -66,7 +69,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
 //        if (mRecorder != null) {
 //            stopRecording();
 //        }
-        Intent intent= new Intent(this,RecordingService.class);
+        Intent intent = new Intent(this, RecordingService.class);
         startService(intent);
         super.onDestroy();
     }
@@ -76,8 +79,11 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     * */
     public void startRecording() {
         setFileNameAndPath();
-
-        mRecorder = new MediaRecorder();
+        if (mRecorder == null)
+            mRecorder = new MediaRecorder();
+        if (isRecordSuccess) {
+            mRecorder.reset();
+        }
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mRecorder.setOutputFile(mFilePath);
@@ -85,15 +91,21 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         mRecorder.setAudioChannels(1);
         mRecorder.setAudioSamplingRate(44100);
         mRecorder.setAudioEncodingBitRate(192000);
-        mRecorder.setMaxDuration(5 * 60 * 1000);
+        mRecorder.setMaxDuration(8 * 60 * 1000);
         mRecorder.setOnInfoListener(this);
+        isRecordSuccess = true;
         try {
             mRecorder.prepare();
             mRecorder.start();
             mStartingTimeMillis = System.currentTimeMillis();
-        } catch (IOException e) {
-            Log.e("sr_up", "prepare() failed");
+            Log.e("sr_up", "recording start......");
+        } catch (Exception e) {
+            e.printStackTrace();
+            isRecordSuccess = false;
+            Log.e("sr_up", "prepare() failed" + e.toString());
+            startRecording();
         }
+
     }
 
     public void setFileNameAndPath() {
@@ -112,7 +124,8 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     }
 
     public void stopRecording() {
-        mRecorder.stop();
+        if (null != mRecorder)
+            mRecorder.stop();
         mElapsedMillis = (System.currentTimeMillis() - mStartingTimeMillis);
         mRecorder.release();
 
@@ -147,8 +160,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     // 启动一个service和推送共用一个通知栏，然后stop这个service使得通知栏消失。
     private void setForeground() {
 
-        if (mServiceConnection == null)
-        {
+        if (mServiceConnection == null) {
             mServiceConnection = new AssistServiceConnection();
         }
         // 绑定另外一条Service，目的是再启动一个通知，然后马上关闭。以达到通知栏没有相关通知
@@ -162,11 +174,10 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     private AssistServiceConnection mServiceConnection;
 
 
-    private class AssistServiceConnection implements ServiceConnection
-    {
+    private class AssistServiceConnection implements ServiceConnection {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Service assistService = ((AssistService.LocalBinder)service)
+            Service assistService = ((AssistService.LocalBinder) service)
                     .getService();
             RecordingService.this.startForeground(NOTIFICATION_ID, getNotification());
             assistService.startForeground(NOTIFICATION_ID, getNotification());
@@ -182,8 +193,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         }
     }
 
-    private Notification getNotification()
-    {
+    private Notification getNotification() {
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
