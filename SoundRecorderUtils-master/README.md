@@ -1,5 +1,5 @@
 ### 前言
-> 最近项目中需要用到录音的功能，搞定需求之后，花了些时间封装成一个录音的工具包，分享给大家，需要源码的 [点击这里](https://github.com/developerHaoz/SoundRecorderUtils)。
+> 最近项目中需要用到录音的功能，搞定需求之后，花了些时间封装成一个录音的工具包，分享给大家，需要源码的 [点击这里](https://github.com/568/xsproject)。
 
 先贴个效果图给大家看一下，看看这个录音包的功能。
 
@@ -370,12 +370,5 @@ public class RecordAudioDialogFragment extends DialogFragment {
         });
         updateSeekBar();
     }
-```
-以上便是本文的全部内容，有关的代码我已经上传到 Github 上了，需要的 [点击这里](https://github.com/developerHaoz/SoundRecorderUtils)，喜欢的话，欢迎来波 star 和 fork
 
------
-### 猜你喜欢
-- [Android 一起来看看知乎开源的图片选择库](http://www.jianshu.com/p/382346bf0aa9)
-- [Android 能让你少走弯路的干货整理](http://www.jianshu.com/p/514656c383a2)
-- [Android 撸起袖子，自己封装 DialogFragment](http://www.jianshu.com/p/c9f20ec7277a)
-- [手把手教你从零开始做一个好看的 APP](http://www.jianshu.com/p/8d2d74d6046f)
+
