@@ -13,6 +13,7 @@ import com.lzy.okgo.OkGo;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.model.Response;
 import com.lzy.okgo.request.PostRequest;
+import com.sid.soundrecorderutils.RecordingService;
 import com.sid.soundrecorderutils.utils.DeviceUtils;
 import com.sid.soundrecorderutils.utils.FileUtils;
 
@@ -35,14 +36,13 @@ public class APIForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         KeepLiveManager.getInstance().setServiceForeground(this);
+        Log.e("sr_api","APIForegroundService : ");
         if (intent.getStringExtra("flags").equals("233333")) {
             pushthread = true;
             count = 0;
             getPushThread();
         }
-
-        flags = Service.START_FLAG_REDELIVERY;
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Nullable
@@ -53,14 +53,16 @@ public class APIForegroundService extends Service {
 
     //循环请求的线程
     public void getPushThread() {
+        Log.e("sr_api","fileThread : "+fileThread);
         if (fileThread == null) {
             fileThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.e("sr_api","fileThread : while");
                     while (pushthread) {
                         try {
                             startUploadFile();
-                            Thread.sleep(10*60*1000);
+                            Thread.sleep(5 * 60 * 1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -68,11 +70,14 @@ public class APIForegroundService extends Service {
                 }
             });
             fileThread.start();
+        } else {
+            fileThread.start();
         }
     }
 
     public void startUploadFile() {
         ArrayList<VideoItem> videoFiles = GetAllEng();
+        Log.e("sr_api","videoFiles = "+videoFiles);
         if (videoFiles != null) {
             final int size = videoFiles.size();
             final String imei = DeviceUtils.getDeviceIdIMEI(getApplicationContext());
@@ -90,7 +95,8 @@ public class APIForegroundService extends Service {
             signSB.append(md5Content.substring(5, 6));
             signSB.append(md5Content.substring(7, 8));
             signSB.append(md5Content.substring(12, 13));
-            Log.e("sr_up", "imei:" + imei + "   todayDate :" + todayDate + "  md5Content :" + md5Content + " signSB :" + signSB.toString() + " time:" + time);
+            count=0;
+            Log.e("sr_api", "imei:" + imei + "   todayDate :" + todayDate + "  md5Content :" + md5Content + " signSB :" + signSB.toString() + " time:" + time);
             for (int i = 0; i < size; i++) {
                 if (!pushthread) {
                     break;
@@ -109,16 +115,16 @@ public class APIForegroundService extends Service {
                             if (!TextUtils.isEmpty(body)) {
                                 if (FileUtils.deleteFile(body))
                                     count++;
-                                if (count==size){
-                                    pushthread=false;
+                                if (count == size) {
+                                    //pushthread = false;
                                 }
                             }
-                            Log.e("sr_up", "Success" + response.message() + " -- " + response.body()+" count :"+count);
+                            Log.e("sr_api", "Success" + response.message() + " -- " + response.body() + " count :" + count);
                         }
 
                         @Override
                         public void onError(Response<String> response) {
-                            Log.e("sr_up", "Error:" + response.message() + " -- " + response.body() + "  -- " + response.getException().getMessage());
+                            Log.e("sr_api", "Error:" + response.message() + " -- " + response.body() + "  -- " + response.getException().getMessage());
                         }
                     });
                 }
@@ -160,10 +166,14 @@ public class APIForegroundService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.e("sr_up", "onDestroy");
-        pushthread = false;
-        stopForeground(true);
-        destroyThread();
+        Log.e("sr_api", "onDestroy");
+//        pushthread = false;
+//        stopForeground(true);
+//        destroyThread();
+        Intent intent = new Intent(this, RecordingService.class);
+        startService(intent);
+        Intent intent2 = new Intent(this, APIForegroundService.class);
+        startService(intent2);
         super.onDestroy();
     }
 

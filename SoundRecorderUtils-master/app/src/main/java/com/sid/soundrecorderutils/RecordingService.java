@@ -57,11 +57,14 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.e("sr_up", "--------录音服务开启了-----------");
         KeepLiveManager.getInstance().setServiceForeground(this);
+        stopRecording();
         startRecording();
         setForeground();
         return START_STICKY;
     }
+
 
     @Override
     public void onDestroy() {
@@ -85,13 +88,13 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
             mRecorder.reset();
         }
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.AAC_ADTS);//MPEG_4
         mRecorder.setOutputFile(mFilePath);
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         mRecorder.setAudioChannels(1);
         mRecorder.setAudioSamplingRate(44100);
         mRecorder.setAudioEncodingBitRate(192000);
-        mRecorder.setMaxDuration(8 * 60 * 1000);
+        mRecorder.setMaxDuration(5 * 60 * 1000);
         mRecorder.setOnInfoListener(this);
         isRecordSuccess = true;
         try {
@@ -103,6 +106,7 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
             e.printStackTrace();
             isRecordSuccess = false;
             Log.e("sr_up", "prepare() failed" + e.toString());
+            stopRecording();
             startRecording();
         }
 
@@ -114,8 +118,12 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         String todayDate = sdf.format(new Date());
         do {
+            File folder = new File(Environment.getExternalStorageDirectory() + "/SoundRecorder/" + todayDate);
+            if (!folder.exists()) {
+                folder.mkdir();
+            }
             count++;
-            mFileName = (System.currentTimeMillis()) + ".mp4";
+            mFileName = (System.currentTimeMillis()) + ".aac";//mp4
             mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath();
             mFilePath += "/SoundRecorder/" + todayDate + "/" + mFileName;
 //            mFilePath += "/SoundRecorder/" + mFileName;
@@ -124,22 +132,27 @@ public class RecordingService extends Service implements MediaRecorder.OnInfoLis
     }
 
     public void stopRecording() {
-        if (null != mRecorder)
-            mRecorder.stop();
-        mElapsedMillis = (System.currentTimeMillis() - mStartingTimeMillis);
-        mRecorder.release();
-
-        getSharedPreferences("sp_name_audio", MODE_PRIVATE)
-                .edit()
-                .putString("audio_path", mFilePath)
-                .putLong("elpased", mElapsedMillis)
-                .apply();
-        if (mIncrementTimerTask != null) {
-            mIncrementTimerTask.cancel();
-            mIncrementTimerTask = null;
+        if (null != mRecorder) {
+            try {
+                mRecorder.stop();
+                mRecorder.release();
+                mRecorder = null;
+            } catch (RuntimeException e) {
+                mRecorder.reset();
+                mRecorder.release();
+                mRecorder = null;
+            }
         }
-
-        mRecorder = null;
+//        mElapsedMillis = (System.currentTimeMillis() - mStartingTimeMillis);
+//        getSharedPreferences("sp_name_audio", MODE_PRIVATE)
+//                .edit()
+//                .putString("audio_path", mFilePath)
+//                .putLong("elpased", mElapsedMillis)
+//                .apply();
+//        if (mIncrementTimerTask != null) {
+//            mIncrementTimerTask.cancel();
+//            mIncrementTimerTask = null;
+//        }
     }
 
     /**

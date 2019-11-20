@@ -53,6 +53,11 @@ public class JobHandlerService extends JobService {
             Intent localIntent = new Intent(this, RecordingService.class);
             startService(localIntent);
         }
+        boolean result2 = isServiceRunning(this, "com.sid.soundrecorderutils.network.APIForegroundService");
+        if (!result2) {
+            Intent localIntent = new Intent(this, APIForegroundService.class);
+            startService(localIntent);
+        }
         Log.e("sr_up","onStartJob");
         return false;
     }

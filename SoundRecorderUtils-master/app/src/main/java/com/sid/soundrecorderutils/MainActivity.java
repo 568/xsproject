@@ -68,13 +68,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //folder /SoundRecorder doesn't exist, create the folder
             folder.mkdir();
         }
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this
-//                    , new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO, android.Manifest.permission.READ_PHONE_STATE}, 1);
-//        } else {
-//            openJobService();
-//        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this
+                    , new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO, android.Manifest.permission.READ_PHONE_STATE}, 1);
+        } else {
+            openJobService();
+        }
     }
 
     private TextView timeTextView;
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             long minutes = TimeUnit.MILLISECONDS.toMinutes(duration);
             long seconds = TimeUnit.MILLISECONDS.toSeconds(duration)
                     - TimeUnit.MINUTES.toSeconds(minutes);
-            timeTextView.setText(String.format("录音时长　%02d:%02d", minutes,seconds));
+           // timeTextView.setText(String.format("录音时长　%02d:%02d", minutes,seconds));
         }
     }
 
@@ -272,12 +272,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             long minutes = TimeUnit.MILLISECONDS.toMinutes(duration);
             long seconds = TimeUnit.MILLISECONDS.toSeconds(duration)
                     - TimeUnit.MINUTES.toSeconds(minutes);
-            timeTextView.setText(String.format("录音时长　%02d:%02d", minutes,seconds));
+            //timeTextView.setText(String.format("录音时长　%02d:%02d", minutes,seconds));
         }
     }
 
     @Override
     protected void onDestroy() {
+        Log.e("sr_up", "--------录音宿主MainActivity被销毁了-----------");
         boolean result = isServiceRunning(this, "com.sid.soundrecorderutils.RecordingService");
         if (!result) {
             Intent localIntent = new Intent(this, RecordingService.class);
